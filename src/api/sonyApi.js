@@ -1,4 +1,5 @@
 import axios from "axios";
+import { IRCC_CODES } from "./irccCodes";
 
 const SONY_TV_IP = import.meta.env.VITE_SONY_TV_IP;
 const PSK = import.meta.env.VITE_SONY_TV_PSK;
@@ -49,3 +50,55 @@ export async function getSystemInformation() {
 
   return response.data.result[0]; // Return just the info object
 }
+
+// Convenience functions for remote control actions
+export async function powerToggle() {
+  return sendIRCC(IRCC_CODES.power);
+}
+
+export async function volumeUp() {
+  return sendIRCC(IRCC_CODES.volumeUp);
+}
+
+export async function volumeDown() {
+  return sendIRCC(IRCC_CODES.volumeDown);
+}
+
+export async function mute() {
+  return sendIRCC(IRCC_CODES.mute);
+}
+
+export async function navigate(direction) {
+  const directions = {
+    up: IRCC_CODES.up,
+    down: IRCC_CODES.down,
+    left: IRCC_CODES.left,
+    right: IRCC_CODES.right,
+    enter: IRCC_CODES.confirm,
+  };
+
+  return sendIRCC(directions[direction.toLowerCase()] || IRCC_CODES.confirm);
+}
+
+export async function pressButton(buttonName) {
+  const code = IRCC_CODES[buttonName.toLowerCase()];
+  if (!code) {
+    throw new Error(`Unknown button: ${buttonName}`);
+  }
+
+  return sendIRCC(code);
+}
+
+export async function switchInput(inputNumber) {
+  const inputs = {
+    1: IRCC_CODES.hdmi1,
+    2: IRCC_CODES.hdmi2,
+    3: IRCC_CODES.hdmi3,
+    4: IRCC_CODES.hdmi4,
+  };
+
+  return sendIRCC(inputs[inputNumber] || IRCC_CODES.input);
+}
+
+// Export all IRCC codes for direct access
+export { IRCC_CODES };

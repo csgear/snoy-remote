@@ -1,55 +1,217 @@
 import React, { useState } from "react";
-import { sendIRCC } from "../api/sonyApi";
+import {
+  sendIRCC,
+  powerToggle,
+  volumeUp,
+  volumeDown,
+  mute,
+  navigate,
+  pressButton,
+  switchInput,
+  IRCC_CODES,
+} from "../api/sonyApi";
 
-const VOLUME_UP = "AAAAAQAAAAEAAAASAw=="; // IRCC Code for Volume Up
-const VOLUME_DOWN = "AAAAAQAAAAEAAAATAw=="; // IRCC Code for Volume Down
+// Basic styling for the remote control
+const styles = {
+  container: {
+    maxWidth: "400px",
+    margin: "0 auto",
+    padding: "20px",
+    backgroundColor: "#f5f5f5",
+    borderRadius: "10px",
+    boxShadow: "0 2px 10px rgba(0, 0, 0, 0.1)",
+  },
+  buttonRow: {
+    display: "flex",
+    justifyContent: "space-between",
+    marginBottom: "15px",
+  },
+  button: {
+    padding: "12px 15px",
+    borderRadius: "5px",
+    border: "none",
+    backgroundColor: "#007bff",
+    color: "white",
+    cursor: "pointer",
+    minWidth: "60px",
+    fontWeight: "bold",
+  },
+  powerButton: {
+    backgroundColor: "#dc3545",
+  },
+  navigationContainer: {
+    display: "grid",
+    gridTemplateColumns: "repeat(3, 1fr)",
+    gridGap: "10px",
+    margin: "20px 0",
+  },
+  title: {
+    textAlign: "center",
+    marginBottom: "20px",
+  },
+  statusMessage: {
+    margin: "15px 0",
+    padding: "10px",
+    backgroundColor: "#e9ecef",
+    borderRadius: "5px",
+    textAlign: "center",
+  },
+};
 
-export default function RemoteControl() {
-  const [loading, setLoading] = useState(false);
+const RemoteControl = () => {
+  const [status, setStatus] = useState("");
 
-  const handleVolume = async (type) => {
-    if (loading) return;
-
-    setLoading(true);
-    const code = type === "up" ? VOLUME_UP : VOLUME_DOWN;
+  // Helper to handle API calls and update status
+  const handleAction = async (action, description) => {
+    setStatus(`Sending ${description}...`);
     try {
-      await sendIRCC(code);
+      await action();
+      setStatus(`${description} sent successfully`);
     } catch (error) {
-      console.error("Failed to send IRCC:", error);
+      setStatus(`Error: ${error.message}`);
+      console.error(error);
     }
-    setTimeout(() => setLoading(false), 200); // 200ms delay
   };
 
   return (
     <div style={styles.container}>
-      <h2>Sony Remote</h2>
-      <button
-        style={styles.button}
-        onClick={() => handleVolume("up")}
-        disabled={loading}
-      >
-        Volume +
-      </button>
-      <button
-        style={styles.button}
-        onClick={() => handleVolume("down")}
-        disabled={loading}
-      >
-        Volume -
-      </button>
+      <h2 style={styles.title}>Sony TV Remote</h2>
+
+      {status && <div style={styles.statusMessage}>{status}</div>}
+
+      {/* Power */}
+      <div style={styles.buttonRow}>
+        <button
+          style={{ ...styles.button, ...styles.powerButton }}
+          onClick={() => handleAction(powerToggle, "Power toggle")}
+        >
+          Power
+        </button>
+      </div>
+
+      {/* Volume controls */}
+      <div style={styles.buttonRow}>
+        <button
+          style={styles.button}
+          onClick={() => handleAction(volumeDown, "Volume down")}
+        >
+          Vol-
+        </button>
+        <button
+          style={styles.button}
+          onClick={() => handleAction(mute, "Mute toggle")}
+        >
+          Mute
+        </button>
+        <button
+          style={styles.button}
+          onClick={() => handleAction(volumeUp, "Volume up")}
+        >
+          Vol+
+        </button>
+      </div>
+
+      {/* Navigation controls */}
+      <div style={styles.navigationContainer}>
+        <div></div>
+        <button
+          style={styles.button}
+          onClick={() => handleAction(() => navigate("up"), "Up")}
+        >
+          ↑
+        </button>
+        <div></div>
+
+        <button
+          style={styles.button}
+          onClick={() => handleAction(() => navigate("left"), "Left")}
+        >
+          ←
+        </button>
+        <button
+          style={styles.button}
+          onClick={() => handleAction(() => navigate("enter"), "Enter")}
+        >
+          OK
+        </button>
+        <button
+          style={styles.button}
+          onClick={() => handleAction(() => navigate("right"), "Right")}
+        >
+          →
+        </button>
+
+        <div></div>
+        <button
+          style={styles.button}
+          onClick={() => handleAction(() => navigate("down"), "Down")}
+        >
+          ↓
+        </button>
+        <div></div>
+      </div>
+
+      {/* HDMI inputs */}
+      <div style={styles.buttonRow}>
+        <button
+          style={styles.button}
+          onClick={() => handleAction(() => switchInput(1), "HDMI 1")}
+        >
+          HDMI 1
+        </button>
+        <button
+          style={styles.button}
+          onClick={() => handleAction(() => switchInput(2), "HDMI 2")}
+        >
+          HDMI 2
+        </button>
+        <button
+          style={styles.button}
+          onClick={() => handleAction(() => switchInput(3), "HDMI 3")}
+        >
+          HDMI 3
+        </button>
+      </div>
+
+      {/* Home and Back buttons */}
+      <div style={styles.buttonRow}>
+        <button
+          style={styles.button}
+          onClick={() => handleAction(() => pressButton("home"), "Home")}
+        >
+          Home
+        </button>
+        <button
+          style={styles.button}
+          onClick={() => handleAction(() => pressButton("back"), "Back")}
+        >
+          Back
+        </button>
+      </div>
+
+      {/* Playback controls */}
+      <div style={styles.buttonRow}>
+        <button
+          style={styles.button}
+          onClick={() => handleAction(() => pressButton("play"), "Play")}
+        >
+          ▶
+        </button>
+        <button
+          style={styles.button}
+          onClick={() => handleAction(() => pressButton("pause"), "Pause")}
+        >
+          ⏸
+        </button>
+        <button
+          style={styles.button}
+          onClick={() => handleAction(() => pressButton("stop"), "Stop")}
+        >
+          ⏹
+        </button>
+      </div>
     </div>
   );
-}
-
-const styles = {
-  container: {
-    textAlign: "center",
-    paddingTop: "100px",
-  },
-  button: {
-    margin: "10px",
-    padding: "20px",
-    fontSize: "18px",
-    cursor: "pointer",
-  },
 };
+
+export default RemoteControl;
